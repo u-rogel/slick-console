@@ -18,7 +18,7 @@ const originalConsole = {
 }
 
 module.exports = ({
-  depth = 1,
+  depth: stackDepth = 1,
   logsColors = {},
 } = {}) => {
   const {
@@ -36,24 +36,9 @@ module.exports = ({
     return `${path.relative(process.cwd(), myStack.getFileName())}:${myStack.getLineNumber()}`
   }
 
-  const printPos = (myPos) => {
-    process.stdout.write(positionColor)
-    process.stdout.write(`${myPos} `)
-    process.stdout.write(defaultColor)
-  }
+  const getTime = () => new Date().toLocaleString()
 
-  const getTime = () => {
-    return new Date().toLocaleString()
-  }
-
-  const printTime = (myTime) => {
-    process.stdout.write(timeColor)
-    process.stdout.write(`${myTime} `)
-    process.stdout.write(defaultColor)
-  }
-
-  const getFile = (stackArr, depth = 1) => stackArr[depth]
-
+  const getFile = (stackArr) => stackArr[stackDepth]
 
   ////////
   // attaching '__stack' to the global scope
@@ -66,7 +51,7 @@ module.exports = ({
       Error.captureStackTrace(err, arguments.callee)
       const { stack } = err
       Error.prepareStackTrace = orig
-      return getFile(Array.from(stack), depth)
+      return getFile(Array.from(stack))
     }
   })
 
@@ -77,12 +62,23 @@ module.exports = ({
     info: console.info,
   }
 
+  const printPos = (myPos) => {
+    process.stdout.write(positionColor)
+    process.stdout.write(`${myPos} `)
+    process.stdout.write(defaultColor)
+  }
+
+  const printTime = (myTime) => {
+    process.stdout.write(timeColor)
+    process.stdout.write(`${myTime} `)
+    process.stdout.write(defaultColor)
+  }
+
   global.console.log = (...value) => {
-    const myTime = getTime()
-    const myPos = getPosition(__stack)
-    printTime(myTime)
-    printPos(myPos)
-    originalConsole.log(logColor, ...value, defaultColor)
+
+    process.stdout.write(logColor)
+    originalConsole.log(...value)
+    process.stdout.write(defaultColor)
   }
 
   global.console.success = (...value) => {
@@ -90,7 +86,9 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    originalConsole.log(successColor, ...value, defaultColor)
+    process.stdout.write(successColor)
+    originalConsole.log(...value)
+    process.stdout.write(defaultColor)
   }
 
   global.console.warn = (...value) => {
@@ -98,7 +96,10 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    originalConsole.warn(warnColor, ...value, defaultColor)
+    process.stdout.write(warnColor)
+    originalConsole.warn(...value)
+    process.stdout.write(defaultColor)
+
   }
 
   global.console.error = (...value) => {
@@ -106,7 +107,9 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    originalConsole.error(errorColor, ...value, defaultColor)
+    process.stdout.write(errorColor)
+    originalConsole.error(...value)
+    process.stdout.write(defaultColor)
   }
 
   global.console.info = (...value) => {
@@ -114,6 +117,8 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    originalConsole.log(infoColor, ...value, defaultColor)
+    process.stdout.write(infoColor)
+    originalConsole.log(...value)
+    process.stdout.write(defaultColor)
   }
 }
