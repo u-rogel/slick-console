@@ -1,31 +1,60 @@
 /* eslint-disable */
 const path = require('path')
 
-const getPosition = (myStack) => {
-  return `${path.relative(process.cwd(), myStack.getFileName())}:${myStack.getLineNumber()}`
-}
+const DEFAULT_CONSOLE_COLOR = '\x1b[0m'
+const DEFAULT_TIME_COLOR = '\x1b[34m'
+const DEFAULT_POSITION_COLOR = '\x1b[35m'
+const DEFAULT_LOG_COLOR = '\x1b[0m'
+const DEFAULT_INFO_COLOR = '\x1b[0m'
+const DEFAULT_WARN_COLOR = '\x1b[0m'
+const DEFAULT_ERROR_COLOR = '\x1b[0m'
+const DEFAULT_SUCCESS_COLOR = '\x1b[0m'
 
-const printPos = (myPos) => {
-  process.stdout.write('\x1b[35m')
-  process.stdout.write(`${myPos} `)
-  process.stdout.write('\x1b[0m')
+const originalConsole = {
+  log: console.log,
+  warn: console.warn,
+  error: console.error,
+  info: console.info,
 }
-
-const getTime = () => {
-  return new Date().toLocaleString()
-}
-
-const printTime = (myTime) => {
-  process.stdout.write('\x1b[34m')
-  process.stdout.write(`${myTime} `)
-  process.stdout.write('\x1b[0m')
-}
-
-const getFile = (stackArr, depth = 1) => stackArr[depth]
 
 module.exports = ({
-  depth = 2
+  depth = 1,
+  logsColors = {},
 } = {}) => {
+  const {
+    default: defaultColor = DEFAULT_CONSOLE_COLOR,
+    time: timeColor = DEFAULT_TIME_COLOR,
+    position: positionColor = DEFAULT_POSITION_COLOR,
+    log: logColor = DEFAULT_LOG_COLOR,
+    info: infoColor = DEFAULT_INFO_COLOR,
+    warn: warnColor = DEFAULT_WARN_COLOR,
+    error: errorColor = DEFAULT_ERROR_COLOR,
+    success: successColor = DEFAULT_SUCCESS_COLOR,
+  } = logsColors
+
+  const getPosition = (myStack) => {
+    return `${path.relative(process.cwd(), myStack.getFileName())}:${myStack.getLineNumber()}`
+  }
+
+  const printPos = (myPos) => {
+    process.stdout.write(positionColor)
+    process.stdout.write(`${myPos} `)
+    process.stdout.write(defaultColor)
+  }
+
+  const getTime = () => {
+    return new Date().toLocaleString()
+  }
+
+  const printTime = (myTime) => {
+    process.stdout.write(timeColor)
+    process.stdout.write(`${myTime} `)
+    process.stdout.write(defaultColor)
+  }
+
+  const getFile = (stackArr, depth = 1) => stackArr[depth]
+
+
   ////////
   // attaching '__stack' to the global scope
   ////////
@@ -41,7 +70,7 @@ module.exports = ({
     }
   })
 
-  const customizedConsole = {
+  const originalConsole = {
     log: console.log,
     warn: console.warn,
     error: console.error,
@@ -53,7 +82,7 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    customizedConsole.log(...value)
+    originalConsole.log(logColor, ...value, defaultColor)
   }
 
   global.console.success = (...value) => {
@@ -61,7 +90,7 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    customizedConsole.log('\x1b[32m', ...value, '\x1b[0m')
+    originalConsole.log(successColor, ...value, defaultColor)
   }
 
   global.console.warn = (...value) => {
@@ -69,7 +98,7 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    customizedConsole.warn('\x1b[33m', ...value, '\x1b[0m')
+    originalConsole.warn(warnColor, ...value, defaultColor)
   }
 
   global.console.error = (...value) => {
@@ -77,7 +106,7 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    customizedConsole.error('\x1b[31m', ...value, '\x1b[0m')
+    originalConsole.error(errorColor, ...value, defaultColor)
   }
 
   global.console.info = (...value) => {
@@ -85,6 +114,6 @@ module.exports = ({
     const myPos = getPosition(__stack)
     printTime(myTime)
     printPos(myPos)
-    customizedConsole.error('\x1b[36m', ...value, '\x1b[0m')
+    originalConsole.log(infoColor, ...value, defaultColor)
   }
 }
