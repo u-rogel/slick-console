@@ -1,4 +1,5 @@
-/* eslint-disable */
+/* global __stack */
+
 const path = require('path')
 
 const DEFAULT_CONSOLE_COLOR = '\x1b[0m'
@@ -9,13 +10,6 @@ const DEFAULT_INFO_COLOR = '\x1b[36m'
 const DEFAULT_WARN_COLOR = '\x1b[33m'
 const DEFAULT_ERROR_COLOR = '\x1b[31m'
 const DEFAULT_SUCCESS_COLOR = '\x1b[32m'
-
-const originalConsole = {
-  log: console.log,
-  warn: console.warn,
-  error: console.error,
-  info: console.info,
-}
 
 module.exports = ({
   depth: stackDepth = 1,
@@ -40,19 +34,18 @@ module.exports = ({
 
   const getFile = (stackArr) => stackArr[stackDepth]
 
-  ////////
   // attaching '__stack' to the global scope
-  ////////
   Object.defineProperty(global, '__stack', {
     get: function () {
       const orig = Error.prepareStackTrace
       Error.prepareStackTrace = function (_, stack) { return stack }
-      const err = new Error
+      const err = new Error()
+      // eslint-disable-next-line no-caller
       Error.captureStackTrace(err, arguments.callee)
       const { stack } = err
       Error.prepareStackTrace = orig
       return getFile(Array.from(stack))
-    }
+    },
   })
 
   const originalConsole = {
@@ -75,7 +68,10 @@ module.exports = ({
   }
 
   global.console.log = (...value) => {
-
+    const myTime = getTime()
+    const myPos = getPosition(__stack)
+    printTime(myTime)
+    printPos(myPos)
     process.stdout.write(logColor)
     originalConsole.log(...value)
     process.stdout.write(defaultColor)
@@ -99,7 +95,6 @@ module.exports = ({
     process.stdout.write(warnColor)
     originalConsole.warn(...value)
     process.stdout.write(defaultColor)
-
   }
 
   global.console.error = (...value) => {
