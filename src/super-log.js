@@ -5,10 +5,10 @@ const DEFAULT_CONSOLE_COLOR = '\x1b[0m'
 const DEFAULT_TIME_COLOR = '\x1b[34m'
 const DEFAULT_POSITION_COLOR = '\x1b[35m'
 const DEFAULT_LOG_COLOR = '\x1b[0m'
-const DEFAULT_INFO_COLOR = '\x1b[0m'
-const DEFAULT_WARN_COLOR = '\x1b[0m'
-const DEFAULT_ERROR_COLOR = '\x1b[0m'
-const DEFAULT_SUCCESS_COLOR = '\x1b[0m'
+const DEFAULT_INFO_COLOR = '\x1b[36m'
+const DEFAULT_WARN_COLOR = '\x1b[33m'
+const DEFAULT_ERROR_COLOR = '\x1b[31m'
+const DEFAULT_SUCCESS_COLOR = '\x1b[32m'
 
 const originalConsole = {
   log: console.log,
