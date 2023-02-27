@@ -1,9 +1,10 @@
 {
-  "name": "super-log",
+  "name": "@u-rogel/slick-console",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^34.0.0",
@@ -11,5 +12,21 @@
     "eslint-plugin-n": "^15.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "typescript": "^4.9.5"
-  }
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "publish": "npm publish --access public",
+    "compile": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/u-rogel/slick-console.git"
+  },
+  "bugs": {
+    "url": "https://github.com/u-rogel/slick-console/issues"
+  },
+  "homepage": "https://github.com/u-rogel/slick-console#readme"
 }
