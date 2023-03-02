@@ -1,18 +1,22 @@
+import type { CallSite } from "callsite"
+
 const path = require('path')
 const util = require('util')
 
-const DEFAULT_CONSOLE_COLOR = '\x1b[0m'
-const DEFAULT_TIME_COLOR = '\x1b[34m'
-const DEFAULT_POSITION_COLOR = '\x1b[35m'
-const DEFAULT_LOG_COLOR = '\x1b[0m'
-const DEFAULT_INFO_COLOR = '\x1b[36m'
-const DEFAULT_WARN_COLOR = '\x1b[33m'
-const DEFAULT_ERROR_COLOR = '\x1b[31m'
-const DEFAULT_SUCCESS_COLOR = '\x1b[32m'
+const DEFAULT_CONSOLE_COLOR = '\x1b[0m' // reset
+const DEFAULT_TIME_COLOR = '\x1b[34m' // blue
+const DEFAULT_POSITION_COLOR = '\x1b[35m' // magenta
+const DEFAULT_LOG_COLOR = '\x1b[0m' // reset
+const DEFAULT_INFO_COLOR = '\x1b[36m' // cyan
+const DEFAULT_WARN_COLOR = '\x1b[33m' // yellow
+const DEFAULT_ERROR_COLOR = '\x1b[31m' // red
+const DEFAULT_SUCCESS_COLOR = '\x1b[32m' // green
+
+const SLICK_CONSOLE_CALL_STACK_OWN_DEPTH = 2
 
 declare global {
   interface Console {
-    success: (...data: any[]) => void
+    success: (...args: any[]) => void
   }
 }
 
@@ -30,8 +34,6 @@ interface IPaintPrintReset {
   stdType: stdType
 }
 
-type TStack = any
-
 export interface IConsoleColors {
   default: string
   time: string
@@ -45,13 +47,15 @@ export interface IConsoleColors {
 
 export interface ISuperLogConfigs {
   relativeDepth?: number
-  logsColors?: Partial<IConsoleColors>
+  consoleColors?: Partial<IConsoleColors>
 }
 
 module.exports = ({
-  relativeDepth: stackDepth = 1,
-  logsColors = {},
+  relativeDepth = 1,
+  consoleColors = {},
 }: ISuperLogConfigs = {}): void => {
+  const requestedCallStackDepthIndex = SLICK_CONSOLE_CALL_STACK_OWN_DEPTH + relativeDepth
+  const requestedCallStackDepth = requestedCallStackDepthIndex + 1
   const {
     default: defaultColor = DEFAULT_CONSOLE_COLOR,
     time: timeColor = DEFAULT_TIME_COLOR,
@@ -61,25 +65,31 @@ module.exports = ({
     warn: warnColor = DEFAULT_WARN_COLOR,
     error: errorColor = DEFAULT_ERROR_COLOR,
     success: successColor = DEFAULT_SUCCESS_COLOR,
-  } = logsColors
+  } = consoleColors
 
-  const getFile = (stackArr: TStack[]) => stackArr[2 + stackDepth]
-
-  const getPosition = (myStack: TStack) => {
-    const fileStack = getFile(myStack)
-    return `${path.relative(process.cwd(), fileStack.getFileName())}:${fileStack.getLineNumber()}`
+  const getPosition = (myStack: CallSite[]) => {
+    const fileFromStack = myStack[requestedCallStackDepthIndex]
+    const absoluteProgramPath = process.cwd()
+    const absoluteFilePath = fileFromStack.getFileName()
+    const relativeFilePath = path.relative(absoluteProgramPath, absoluteFilePath)
+    const lineNumber = fileFromStack.getLineNumber()
+    const columnNumber = fileFromStack.getColumnNumber()
+    return `${relativeFilePath}:${lineNumber}:${columnNumber}`
   }
 
   const getTime = () => new Date().toLocaleString()
 
-  const errStack = () => {
-    const orig = Error.prepareStackTrace
-    Error.prepareStackTrace = function (_, stack) { return stack }
+  const errStack = (): CallSite[] => {
+    const origStackTraceLimit = Error.stackTraceLimit
+    const origPrepareStackTrace = Error.prepareStackTrace
+    Error.stackTraceLimit = requestedCallStackDepth
+    Error.prepareStackTrace = (err, stack) => stack
     const err = new Error()
     Error.captureStackTrace(err, errStack)
     const { stack } = err
-    Error.prepareStackTrace = orig
-    return stack as any
+    Error.stackTraceLimit = origStackTraceLimit
+    Error.prepareStackTrace = origPrepareStackTrace
+    return stack as unknown as CallSite[]
   }
 
   const paintPrintReset = ({ color, content, stdType }: IPaintPrintReset) => {
@@ -110,28 +120,28 @@ module.exports = ({
     })
   }
 
-  console.log = (...value) => {
+  global.console.log = (...value) => {
     generateConsoleLine({
       color: logColor,
       content: value
     })
   }
 
-  console.info = (...value) => {
+  global.console.info = (...value) => {
     generateConsoleLine({
       color: infoColor,
       content: value
     })
   }
 
-  console.success = (...value) => {
+  global.console.success = (...value) => {
     generateConsoleLine({
       color: successColor,
       content: value
     })
   }
 
-  console.warn = (...value) => {
+  global.console.warn = (...value) => {
     generateConsoleLine({
       color: warnColor,
       content: value,
@@ -139,7 +149,7 @@ module.exports = ({
     })
   }
 
-  console.error = (...value) => {
+  global.console.error = (...value) => {
     generateConsoleLine({
       color: errorColor,
       content: value,

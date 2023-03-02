@@ -1,9 +1,10 @@
 {
   "name": "@u-rogel/slick-console",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "main": "./dist/index.js",
   "license": "MIT",
   "devDependencies": {
+    "@types/callsite": "^1.0.31",
     "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "eslint": "^8.0.1",
